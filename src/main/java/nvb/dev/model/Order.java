@@ -1,4 +1,4 @@
-package nvb.dev;
+package nvb.dev.model;
 
 import java.util.UUID;
 

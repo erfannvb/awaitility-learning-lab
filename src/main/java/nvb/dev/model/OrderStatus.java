@@ -1,4 +1,4 @@
-package nvb.dev;
+package nvb.dev.model;
 
 public enum OrderStatus {
     PENDING,
