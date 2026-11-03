@@ -8,6 +8,7 @@ import nvb.dev.service.OrderService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -32,10 +33,12 @@ public class OrderServiceImpl implements OrderService, AutoCloseable {
     }
 
     @Override
-    public void processOrder(UUID id) {
+    public void processOrder(UUID id, CountDownLatch latch) {
         Order order = getOrder(id);
         executorService.submit(() -> {
             order.updateStatus(OrderStatus.PROCESSING);
+            latch.countDown();
+
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
