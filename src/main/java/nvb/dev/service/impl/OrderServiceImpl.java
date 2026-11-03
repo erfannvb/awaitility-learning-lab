@@ -8,10 +8,13 @@ import nvb.dev.service.OrderService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class OrderServiceImpl implements OrderService {
+public class OrderServiceImpl implements OrderService, AutoCloseable {
 
     private final Map<UUID, Order> orderMap = new HashMap<>();
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
     public Order createOrder() {
@@ -31,7 +34,20 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void processOrder(UUID id) {
         Order order = getOrder(id);
-        order.updateStatus(OrderStatus.PROCESSING);
-        order.updateStatus(OrderStatus.COMPLETED);
+        executorService.submit(() -> {
+            order.updateStatus(OrderStatus.PROCESSING);
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            order.updateStatus(OrderStatus.COMPLETED);
+        });
+    }
+
+    @Override
+    public void close() {
+        executorService.shutdown();
     }
 }

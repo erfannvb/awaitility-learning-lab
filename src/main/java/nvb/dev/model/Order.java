@@ -5,7 +5,7 @@ import java.util.UUID;
 public class Order {
 
     private final UUID id;
-    private OrderStatus orderStatus;
+    private volatile OrderStatus orderStatus;
 
     public Order() {
         this.id = UUID.randomUUID();
