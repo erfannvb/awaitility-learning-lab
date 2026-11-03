@@ -2,13 +2,13 @@ package nvb.dev.service.impl;
 
 import nvb.dev.model.Order;
 import nvb.dev.model.OrderStatus;
+import org.awaitility.core.TerminalFailureException;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class OrderServiceTest {
 
@@ -52,6 +52,28 @@ class OrderServiceTest {
                     .atMost(Duration.ofSeconds(1))
                     .during(Duration.ofMillis(500))
                     .until(() -> order.getOrderStatus() == OrderStatus.PROCESSING);
+        }
+    }
+
+    @Test
+    void shouldFailImmediatelyWhenOrderProcessingFails() {
+        try (OrderServiceImpl orderService = new OrderServiceImpl()) {
+            Order order = orderService.createOrder();
+
+            orderService.processOrder(order.getId());
+
+            await()
+                    .atMost(Duration.ofSeconds(3))
+                    .until(() -> order.getOrderStatus() == OrderStatus.PROCESSING);
+
+            orderService.failOrder(order.getId());
+
+            assertThrows(TerminalFailureException.class, () -> {
+                await()
+                        .atMost(Duration.ofSeconds(3))
+                        .failFast(() -> order.getOrderStatus() == OrderStatus.FAILED)
+                        .untilAsserted(() -> assertEquals(OrderStatus.COMPLETED, order.getOrderStatus()));
+            });
         }
     }
 }

@@ -42,8 +42,16 @@ public class OrderServiceImpl implements OrderService, AutoCloseable {
                 Thread.currentThread().interrupt();
                 return;
             }
-            order.updateStatus(OrderStatus.COMPLETED);
+
+            if (order.getOrderStatus() != OrderStatus.FAILED)
+                order.updateStatus(OrderStatus.COMPLETED);
         });
+    }
+
+    @Override
+    public void failOrder(UUID id) {
+        Order order = getOrder(id);
+        order.updateStatus(OrderStatus.FAILED);
     }
 
     @Override
